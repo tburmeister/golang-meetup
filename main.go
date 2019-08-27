@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"image/jpeg"
 	"image/png"
 	"io/ioutil"
@@ -9,7 +10,12 @@ import (
 )
 
 func main() {
-	filename := "test"
+	ff := flag.String("img", "", "The image to process")
+	flag.Parse()
+
+	filename := *ff
+	log.Printf("image: %s\n", filename)
+
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatalf("unable to read file %s", filename)

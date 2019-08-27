@@ -1,28 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"image/jpeg"
 	"image/png"
+	"io/ioutil"
 	"log"
-	"os"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("must supply an image")
-		return
+	filename := "test"
+	raw, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Fatalf("unable to read file %s", filename)
 	}
 
-	file, err := os.Open(os.Args[1])
+	reader := bytes.NewReader(raw)
+	img, err := jpeg.Decode(reader)
 	if err != nil {
-		log.Fatalf("unable to open %s", os.Args[1])
-		return
-	}
-	defer file.Close()
-
-	img, err := jpeg.Decode(file)
-	if err != nil {
-		img, err = png.Decode(file)
+		img, err = png.Decode(reader)
 	}
 	if err != nil {
 		log.Fatal("unable to decode image - not jpeg or png")

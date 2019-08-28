@@ -36,14 +36,11 @@ func encodeRGBA(img *image.RGBA, secret []byte) {
 	message[0] = byte(len(secret))
 	message = append(message, secret...)
 
-	fmt.Printf("len=%d\n", len(secret))
-
 	i := 0
 	nextBit := func() byte {
 		var bit byte
 		if i < len(message)*8 {
 			bit = getBit(message[i/8], i%8)
-			fmt.Printf("i=%d b=%v\n", i, bit)
 		}
 		i++
 		return bit
@@ -77,7 +74,6 @@ func decodeRGBA(img *image.RGBA) []byte {
 		}
 	}
 	length := int(secret[0])
-	fmt.Printf("len=%d\n", length)
 	return secret[1 : length+1]
 }
 

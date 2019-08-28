@@ -44,7 +44,7 @@ func encodeRGBA(img *image.RGBA, secret []byte) {
 		return bit
 	}
 
-	message := make([]byte, 0, len(secret)+1)
+	message := make([]byte, 1, len(secret)+1)
 	message[0] = byte(len(secret))
 	message = append(message, secret...)
 

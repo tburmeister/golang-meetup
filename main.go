@@ -27,7 +27,6 @@ func imageToRGBA(img image.Image) *image.RGBA {
 
 // encodeRGBA encodes a secret into an RGBAimage
 func encodeRGBA(img *image.RGBA, secret []byte) {
-	// buffer := bytes.NewBuffer(make[])
 	bounds := img.Bounds()
 	i := 0
 
@@ -44,12 +43,30 @@ func encodeRGBA(img *image.RGBA, secret []byte) {
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 
 			c := img.RGBAAt(x, y)
-			c.R = setLSB(c.A, nextBit())
+			c.R = setLSB(c.R, nextBit())
 			c.G = setLSB(c.G, nextBit())
 			c.B = setLSB(c.B, nextBit())
 			img.SetRGBA(x, y, c)
 		}
 	}
+}
+
+func decodeRGBA(img *image.RGBA) []byte {
+	bounds := img.Bounds()
+	secret := make([]byte, (bounds.Dx()*bounds.Dy())/8)
+	i := 0
+	for x := bounds.Min.X; x < bounds.Max.X; x++ {
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			c := img.RGBAAt(x, y)
+			secret[i/8] = setBit(secret[i/8], i%8, getLSB(c.R))
+			i++
+			secret[i/8] = setBit(secret[i/8], i%8, getLSB(c.G))
+			i++
+			secret[i/8] = setBit(secret[i/8], i%8, getLSB(c.B))
+			i++
+		}
+	}
+	return secret
 }
 
 // getBit returns the bit at index
@@ -61,6 +78,25 @@ func getBit(b byte, index int) byte {
 		return 1
 	}
 	return 0
+}
+
+// setBit returns byte with the bit at index set to bit
+func setBit(b byte, index int, bit byte) byte {
+	var mask byte = 0x80
+	mask = mask >> uint(index)
+
+	if bit == 0 {
+		mask = ^mask
+		b = b & mask
+	} else if bit == 1 {
+		b = b | mask
+	}
+	return b
+}
+
+// getLSB returns the least significant bit of byte b
+func getLSB(b byte) byte {
+	return getBit(b, 0)
 }
 
 // setLSB sets the least significant bit of byte b to bit

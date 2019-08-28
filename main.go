@@ -18,6 +18,10 @@ import (
 	"regexp"
 )
 
+// Usage:
+// ./golang-meetup -img gopher.jpeg -msg hey
+// ./golang-meetup -img gopher-encrypted.jpeg -decrypt
+
 // imageToRGBA converts image.Image to image.RGBA
 func imageToRGBA(img image.Image) *image.RGBA {
 	bounds := img.Bounds()
@@ -58,7 +62,7 @@ func encodeRGBA(img *image.RGBA, secret []byte) {
 
 func decodeRGBA(img *image.RGBA) []byte {
 	bounds := img.Bounds()
-	secret := make([]byte, (bounds.Dx()*bounds.Dy())/8)
+	secret := make([]byte, bounds.Dx()*bounds.Dy())
 	i := 0
 	for x := bounds.Min.X; x < bounds.Max.X; x++ {
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {

@@ -2,13 +2,18 @@ package main
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"io/ioutil"
-	"log"
 )
 
 const (
@@ -24,6 +29,8 @@ func decrypt(img image.Image) (string, error) {
 	return "", fmt.Errorf("unimplemented")
 }
 
+var passphrase = "chopped"
+
 func main() {
 	ff := flag.String("img", "", "The image to process")
 	df := flag.Bool("decrypt", false, "Flag on to decrypt image (default encrypts)")
@@ -35,7 +42,7 @@ func main() {
 
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Fatalf("unable to read file %s", filename)
+		panic(fmt.Sprintf("unable to read file %s", filename))
 	}
 
 	reader := bytes.NewReader(raw)
@@ -45,9 +52,9 @@ func main() {
 		img, err = png.Decode(reader)
 		format = formatPng
 	}
+	fmt.Printf("format: %d\n", format)
 	if err != nil {
-		log.Fatal("unable to decode image - not jpeg or png")
-		return
+		panic("unable to decode image - not jpeg or png")
 	}
 
 	if *df {
@@ -79,4 +86,43 @@ func main() {
 			panic(err)
 		}
 	}
+}
+
+func encryptText(data []byte, passphrase string) []byte {
+	block, _ := aes.NewCipher([]byte(_badHash(passphrase)))
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		panic(err.Error())
+	}
+	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+	return ciphertext
+}
+
+func decryptText(data []byte, passphrase string) []byte {
+	key := []byte(_badHash(passphrase))
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err.Error())
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonceSize := gcm.NonceSize()
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	return plaintext
+}
+
+func _badHash(passphrase string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(passphrase))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

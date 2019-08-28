@@ -72,24 +72,16 @@ func setLSB(b byte, bit byte) byte {
 const (
 	formatJpeg = iota
 	formatPng
+
+	passphrase = "chopped"
 )
 
-func encode(img image.Image, str string) (image.Image, error) {
+func encode(img image.Image, secret []byte) (image.Image, error) {
 	return nil, fmt.Errorf("unimplemented")
 }
 
-func decode(img image.Image) (string, error) {
-	return "", fmt.Errorf("unimplemented")
-}
-
-var passphrase = "chopped"
-
-func encryptTest() {
-	var plaintext = "this is a test string"
-	fmt.Println(encrypt([]byte(plaintext), passphrase))
-
-	var crypted = []byte{56, 93, 224, 168, 120, 26, 240, 96, 173, 87, 39, 111, 204, 188, 151, 201, 171, 250, 49, 44, 39, 241, 164, 129, 64, 132, 158, 247, 88, 113, 172, 241, 216, 144, 94, 189, 197, 244, 119, 221, 57, 176, 132, 195, 211, 148, 4, 29, 72}
-	fmt.Println(string(decrypt(crypted, passphrase)))
+func decode(img image.Image) ([]byte, error) {
+	return nil, fmt.Errorf("unimplemented")
 }
 
 func main() {
@@ -127,7 +119,7 @@ func main() {
 		fmt.Println(plaintext)
 	} else {
 		ciphertext := encrypt([]byte(msg), passphrase)
-		new, err := encode(img, string(ciphertext))
+		new, err := encode(img, ciphertext)
 		if err != nil {
 			panic(fmt.Sprintf("unable to encrypt image: %s", err))
 		}

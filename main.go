@@ -40,6 +40,10 @@ func encodeRGBA(img *image.RGBA, secret []byte) {
 		return bit
 	}
 
+	message := make([]byte, 0, len(secret)+1)
+	message[0] = byte(len(secret))
+	message = append(message, secret...)
+
 	for x := bounds.Min.X; x < bounds.Max.X; x++ {
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 
@@ -67,7 +71,8 @@ func decodeRGBA(img *image.RGBA) []byte {
 			i++
 		}
 	}
-	return secret
+	length := int(secret[0])
+	return secret[1 : length+1]
 }
 
 // getBit returns the bit at index

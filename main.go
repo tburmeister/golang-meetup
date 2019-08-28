@@ -179,7 +179,7 @@ func main() {
 
 		switch format {
 		case formatJpeg:
-			err = jpeg.Encode(writer, new, &jpeg.Options{Quality: 100})
+			err = jpeg.Encode(writer, new, &jpeg.Options{Quality: jpeg.DefaultQuality})
 			if err != nil {
 				panic(fmt.Sprintf("unable to encode jpeg: %s", err))
 			}

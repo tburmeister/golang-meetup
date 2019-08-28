@@ -60,28 +60,35 @@ func main() {
 	if *df {
 		msg, err := decrypt(img)
 		if err != nil {
-			log.Fatalf("unable to decrypt image: %s", err)
+			panic(fmt.Sprintf("unable to decrypt image: %s", err))
 			return
 		}
 		fmt.Println(msg)
 	} else {
 		new, err := encrypt(img, msg)
 		if err != nil {
-			log.Fatalf("unable to encrypt image: %s", err)
+			panic(fmt.Sprintf("unable to encrypt image: %s", err))
 			return
 		}
 
-		raw := make([]byte, 0)
+		var buf bytes.Buffer
+		writer := io.Writer(&buf)
 		ext := ""
 
 		switch format {
 		case formatJpeg:
-			jpeg.Encode(raw, new, &jpeg.Options{100})
+			err = jpeg.Encode(writer, new, &jpeg.Options{Quality: 100})
+			if err != nil {
+				panic(fmt.Sprintf("unable to encode jpeg: %s", err))
+			}
 		case formatPng:
-			png.Encode(raw, new)
+			err = png.Encode(writer, new)
+			if err != nil {
+				panic(fmt.Sprintf("unable to encode png: %s", err))
+			}
 		}
 
-		err = ioutil.WriteFile(filename[:len(filename)-4] + "-encrypted" + ext, raw, 0644)
+		err = ioutil.WriteFile(filename[:len(filename)-4] + "-encrypted" + ext, buf.Bytes(), 0644)
 		if err != nil {
 			panic(err)
 		}

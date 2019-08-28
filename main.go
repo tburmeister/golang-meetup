@@ -164,10 +164,12 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("unable to decode image: %s", err))
 		}
-		plaintext := decrypt([]byte(msg), passphrase)
-		fmt.Println(plaintext)
+		fmt.Println(string(msg))
+		//plaintext := decrypt([]byte(msg), passphrase)
+		//fmt.Println(plaintext)
 	} else {
 		ciphertext := encrypt([]byte(msg), passphrase)
+		ciphertext = []byte(msg)
 		new, err := encode(img, ciphertext)
 		if err != nil {
 			panic(fmt.Sprintf("unable to encrypt image: %s", err))
@@ -178,7 +180,7 @@ func main() {
 
 		switch format {
 		case formatJpeg:
-			err = jpeg.Encode(writer, new, &jpeg.Options{Quality: 100})
+			err = jpeg.Encode(writer, new, &jpeg.Options{Quality: jpeg.DefaultQuality})
 			if err != nil {
 				panic(fmt.Sprintf("unable to encode jpeg: %s", err))
 			}

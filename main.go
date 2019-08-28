@@ -2,12 +2,20 @@ package main
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/hex"
+	"flag"
+	"fmt"
 	"image"
 	"image/draw"
 	"image/jpeg"
 	"image/png"
+	"io"
+	"io/ioutil"
 	"log"
-	"os"
 )
 
 // imageToRGBA converts image.Image to image.RGBA
@@ -61,27 +69,113 @@ func setLSB(b byte, bit byte) byte {
 	return b&254 + bit
 }
 
+const (
+	formatJpeg = iota
+	formatPng
+)
+
+func encrypt(img image.Image, str string) (image.Image, error) {
+	return nil, fmt.Errorf("unimplemented")
+}
+
+func decrypt(img image.Image) (string, error) {
+	return "", fmt.Errorf("unimplemented")
+}
+
+var passphrase = "chopped"
+
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("must supply an image")
-		return
+	ff := flag.String("img", "", "The image to process")
+	df := flag.Bool("decrypt", false, "Flag on to decrypt image (default encrypts)")
+	mf := flag.String("msg", "", "Message to encrypt in image")
+	flag.Parse()
+
+	filename := *ff
+	msg := *mf
+
+	raw, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(fmt.Sprintf("unable to read file %s", filename))
 	}
 
-	file, err := os.Open(os.Args[1])
+	reader := bytes.NewReader(raw)
+	img, err := jpeg.Decode(reader)
+	format := formatJpeg
 	if err != nil {
-		log.Fatalf("unable to open %s", os.Args[1])
-		return
+		img, err = png.Decode(reader)
+		format = formatPng
 	}
-	defer file.Close()
-
-	img, err := jpeg.Decode(file)
+	fmt.Printf("format: %d\n", format)
 	if err != nil {
-		img, err = png.Decode(file)
-	}
-	if err != nil {
-		log.Fatal("unable to decode image - not jpeg or png")
-		return
+		panic("unable to decode image - not jpeg or png")
 	}
 
-	_ = img
+	if *df {
+		msg, err := decrypt(img)
+		if err != nil {
+			log.Fatalf("unable to decrypt image: %s", err)
+			return
+		}
+		fmt.Println(msg)
+	} else {
+		new, err := encrypt(img, msg)
+		if err != nil {
+			log.Fatalf("unable to encrypt image: %s", err)
+			return
+		}
+
+		raw := make([]byte, 0)
+		ext := ""
+
+		switch format {
+		case formatJpeg:
+			jpeg.Encode(raw, new, &jpeg.Options{100})
+		case formatPng:
+			png.Encode(raw, new)
+		}
+
+		err = ioutil.WriteFile(filename[:len(filename)-4]+"-encrypted"+ext, raw, 0644)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func encryptText(data []byte, passphrase string) []byte {
+	block, _ := aes.NewCipher([]byte(_badHash(passphrase)))
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		panic(err.Error())
+	}
+	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+	return ciphertext
+}
+
+func decryptText(data []byte, passphrase string) []byte {
+	key := []byte(_badHash(passphrase))
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err.Error())
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonceSize := gcm.NonceSize()
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	return plaintext
+}
+
+func _badHash(passphrase string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(passphrase))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

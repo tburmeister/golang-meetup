@@ -84,6 +84,14 @@ func decrypt(img image.Image) (string, error) {
 
 var passphrase = "chopped"
 
+func testmain() {
+	var plaintext = "this is a test string"
+	fmt.Println(encryptText([]byte(plaintext), passphrase))
+
+	var crypted = []byte{56, 93, 224, 168, 120, 26, 240, 96, 173, 87, 39, 111, 204, 188, 151, 201, 171, 250, 49, 44, 39, 241, 164, 129, 64, 132, 158, 247, 88, 113, 172, 241, 216, 144, 94, 189, 197, 244, 119, 221, 57, 176, 132, 195, 211, 148, 4, 29, 72}
+	fmt.Println(string(decryptText(crypted, passphrase)))
+}
+
 func main() {
 	ff := flag.String("img", "", "The image to process")
 	df := flag.Bool("decrypt", false, "Flag on to decrypt image (default encrypts)")
@@ -113,28 +121,35 @@ func main() {
 	if *df {
 		msg, err := decrypt(img)
 		if err != nil {
-			log.Fatalf("unable to decrypt image: %s", err)
+			panic(fmt.Sprintf("unable to decrypt image: %s", err))
 			return
 		}
 		fmt.Println(msg)
 	} else {
 		new, err := encrypt(img, msg)
 		if err != nil {
-			log.Fatalf("unable to encrypt image: %s", err)
+			panic(fmt.Sprintf("unable to encrypt image: %s", err))
 			return
 		}
 
-		raw := make([]byte, 0)
+		var buf bytes.Buffer
+		writer := io.Writer(&buf)
 		ext := ""
 
 		switch format {
 		case formatJpeg:
-			jpeg.Encode(raw, new, &jpeg.Options{100})
+			err = jpeg.Encode(writer, new, &jpeg.Options{Quality: 100})
+			if err != nil {
+				panic(fmt.Sprintf("unable to encode jpeg: %s", err))
+			}
 		case formatPng:
-			png.Encode(raw, new)
+			err = png.Encode(writer, new)
+			if err != nil {
+				panic(fmt.Sprintf("unable to encode png: %s", err))
+			}
 		}
 
-		err = ioutil.WriteFile(filename[:len(filename)-4]+"-encrypted"+ext, raw, 0644)
+		err = ioutil.WriteFile(filename[:len(filename)-4]+"-encrypted"+ext, buf.Bytes(), 0644)
 		if err != nil {
 			panic(err)
 		}

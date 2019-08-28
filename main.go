@@ -15,7 +15,6 @@ import (
 	"image/png"
 	"io"
 	"io/ioutil"
-	"log"
 )
 
 // imageToRGBA converts image.Image to image.RGBA
@@ -35,7 +34,7 @@ func encodeRGBA(img *image.RGBA, secret []byte) {
 	nextBit := func() byte {
 		var bit byte
 		if i < len(secret)*8 {
-			bit := getBit(secret[i/8], i%8)
+			bit = getBit(secret[i/8], i%8)
 		}
 		i++
 		return bit

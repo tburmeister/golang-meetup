@@ -15,6 +15,7 @@ import (
 	"image/png"
 	"io"
 	"io/ioutil"
+	"regexp"
 )
 
 // imageToRGBA converts image.Image to image.RGBA
@@ -133,7 +134,6 @@ func main() {
 
 		var buf bytes.Buffer
 		writer := io.Writer(&buf)
-		ext := ""
 
 		switch format {
 		case formatJpeg:
@@ -148,7 +148,8 @@ func main() {
 			}
 		}
 
-		err = ioutil.WriteFile(filename[:len(filename)-4]+"-encrypted"+ext, buf.Bytes(), 0644)
+		re := regexp.MustCompile(`(\w+)\.(png|jpeg)`)
+		err = ioutil.WriteFile(re.ReplaceAllString(filename, `$1-encrypted.$2`), buf.Bytes(), 0644)
 		if err != nil {
 			panic(err)
 		}

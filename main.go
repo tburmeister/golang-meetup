@@ -31,6 +31,14 @@ func decrypt(img image.Image) (string, error) {
 
 var passphrase = "chopped"
 
+func testmain() {
+	var plaintext = "this is a test string"
+	fmt.Println(encryptText([]byte(plaintext), passphrase))
+
+	var crypted = []byte{56, 93, 224, 168, 120, 26, 240, 96, 173, 87, 39, 111, 204, 188, 151, 201, 171, 250, 49, 44, 39, 241, 164, 129, 64, 132, 158, 247, 88, 113, 172, 241, 216, 144, 94, 189, 197, 244, 119, 221, 57, 176, 132, 195, 211, 148, 4, 29, 72}
+	fmt.Println(string(decryptText(crypted, passphrase)))
+}
+
 func main() {
 	ff := flag.String("img", "", "The image to process")
 	df := flag.Bool("decrypt", false, "Flag on to decrypt image (default encrypts)")

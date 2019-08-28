@@ -32,25 +32,26 @@ func imageToRGBA(img image.Image) *image.RGBA {
 
 // encodeRGBA encodes a secret into an RGBAimage
 func encodeRGBA(img *image.RGBA, secret []byte) {
-	bounds := img.Bounds()
-	i := 0
+	message := make([]byte, 1, len(secret)+1)
+	message[0] = byte(len(secret))
+	message = append(message, secret...)
 
+	fmt.Printf("len=%d\n", len(secret))
+
+	i := 0
 	nextBit := func() byte {
 		var bit byte
-		if i < len(secret)*8 {
-			bit = getBit(secret[i/8], i%8)
+		if i < len(message)*8 {
+			bit = getBit(message[i/8], i%8)
+			fmt.Printf("i=%d b=%v\n", i, bit)
 		}
 		i++
 		return bit
 	}
 
-	message := make([]byte, 1, len(secret)+1)
-	message[0] = byte(len(secret))
-	message = append(message, secret...)
-
+	bounds := img.Bounds()
 	for x := bounds.Min.X; x < bounds.Max.X; x++ {
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-
 			c := img.RGBAAt(x, y)
 			c.R = setLSB(c.R, nextBit())
 			c.G = setLSB(c.G, nextBit())
@@ -76,6 +77,7 @@ func decodeRGBA(img *image.RGBA) []byte {
 		}
 	}
 	length := int(secret[0])
+	fmt.Printf("len=%d\n", length)
 	return secret[1 : length+1]
 }
 
@@ -111,7 +113,7 @@ func getLSB(b byte) byte {
 
 // setLSB sets the least significant bit of byte b to bit
 func setLSB(b byte, bit byte) byte {
-	return b&254 + bit
+	return setBit(b, 0, bit)
 }
 
 const (
@@ -122,6 +124,7 @@ const (
 )
 
 func encode(img image.Image, secret []byte) (image.Image, error) {
+	fmt.Printf("%+v\n", secret)
 	rgba := imageToRGBA(img)
 	encodeRGBA(rgba, secret)
 	return rgba, nil
@@ -129,7 +132,9 @@ func encode(img image.Image, secret []byte) (image.Image, error) {
 
 func decode(img image.Image) ([]byte, error) {
 	rgba := imageToRGBA(img)
-	return decodeRGBA(rgba), nil
+	secret := decodeRGBA(rgba)
+	fmt.Printf("%+v\n", secret)
+	return secret, nil
 }
 
 func main() {

@@ -113,11 +113,14 @@ const (
 )
 
 func encode(img image.Image, secret []byte) (image.Image, error) {
-	return nil, fmt.Errorf("unimplemented")
+	rgba := imageToRGBA(img)
+	encodeRGBA(rgba, secret)
+	return rgba, nil
 }
 
 func decode(img image.Image) ([]byte, error) {
-	return nil, fmt.Errorf("unimplemented")
+	rgba := imageToRGBA(img)
+	return decodeRGBA(rgba), nil
 }
 
 func main() {

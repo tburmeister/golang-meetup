@@ -163,10 +163,12 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("unable to decode image: %s", err))
 		}
-		plaintext := decrypt([]byte(msg), passphrase)
-		fmt.Println(plaintext)
+		fmt.Println(string(msg))
+		//plaintext := decrypt([]byte(msg), passphrase)
+		//fmt.Println(plaintext)
 	} else {
 		ciphertext := encrypt([]byte(msg), passphrase)
+		ciphertext = []byte(msg)
 		new, err := encode(img, ciphertext)
 		if err != nil {
 			panic(fmt.Sprintf("unable to encrypt image: %s", err))

@@ -31,7 +31,7 @@ func main() {
 	flag.Parse()
 
 	filename := *ff
-	log.Printf("image: %s\n", filename)
+	msg := *mf
 
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -51,11 +51,32 @@ func main() {
 	}
 
 	if *df {
-		// Decrypt image
+		msg, err := decrypt(img)
+		if err != nil {
+			log.Fatalf("unable to decrypt image: %s", err)
+			return
+		}
+		fmt.Println(msg)
 	} else {
-		// Encrypt image
-		_ = *mf
-	}
+		new, err := encrypt(img, msg)
+		if err != nil {
+			log.Fatalf("unable to encrypt image: %s", err)
+			return
+		}
 
-	_ = img
+		raw := make([]byte, 0)
+		ext := ""
+
+		switch format {
+		case formatJpeg:
+			jpeg.Encode(raw, new, &jpeg.Options{100})
+		case formatPng:
+			png.Encode(raw, new)
+		}
+
+		err = ioutil.WriteFile(filename[:len(filename)-4] + "-encrypted" + ext, raw, 0644)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
